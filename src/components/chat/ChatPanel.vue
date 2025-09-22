@@ -161,10 +161,10 @@ const showQuickActions = ref(true)
 
 // Quick action suggestions
 const quickActions = computed(() => [
-  { id: 'services', label: 'What services do you offer?', message: 'What services do you offer?' },
-  { id: 'pricing', label: 'Pricing information', message: 'Can you show me your pricing?' },
-  { id: 'contact', label: 'How to contact you', message: 'How can I get in touch?' },
-  { id: 'demo', label: 'Request demo', message: 'Can I see a demo?' },
+  { id: 'services', label: 'What FMCG products do you trade?', message: 'What FMCG products do you trade?' },
+  { id: 'pricing', label: 'Trading partnerships', message: 'How do your trading partnerships work?' },
+  { id: 'contact', label: 'Connect with traders', message: 'Can you help me connect with traders?' },
+  { id: 'demo', label: 'Find textile exporters in Turkey', message: 'Find textile exporters in Turkey' },
 ])
 
 // Computed properties

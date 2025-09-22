@@ -3,6 +3,8 @@ import { ref, computed } from 'vue'
 import type { Message, ChatState, AIResponse } from '@/types'
 import { useKnowledgeStore } from '@/stores/knowledge'
 import { useAppStore } from '@/stores/app'
+import { useContentStore } from '@/stores/content'
+import { traderService } from '@/services/traderService'
 
 export const useChatStore = defineStore('chat', () => {
   // State
@@ -31,6 +33,8 @@ export const useChatStore = defineStore('chat', () => {
   const assistantMessages = computed(() => {
     return messages.value.filter(m => m.role === 'assistant')
   })
+
+  // Helper functions (currently unused but may be useful later)
 
   // Actions
   function generateSessionId(): string {
@@ -95,6 +99,7 @@ export const useChatStore = defineStore('chat', () => {
   async function callAIService(message: string): Promise<AIResponse> {
     const knowledgeStore = useKnowledgeStore()
     const appStore = useAppStore()
+    const contentStore = useContentStore()
     const business = appStore.currentBusiness
     const lowerMessage = message.toLowerCase()
 
@@ -105,8 +110,41 @@ export const useChatStore = defineStore('chat', () => {
         let intent = 'general_inquiry'
         let confidence = 0.7
 
-        // Search knowledge base
-        if (business) {
+        // Check for trader-related queries FIRST (before knowledge base)
+        if (traderService.isTraderQuery(message)) {
+          console.log(`Detected trader query: "${message}"`)
+
+          try {
+            const searchQuery = traderService.parseQuery(message)
+            console.log('Parsed search query:', searchQuery)
+
+            const searchResults = traderService.searchTraders(searchQuery)
+            console.log('Search results:', searchResults.totalCount, 'traders found')
+
+            response = traderService.generateTraderResponse(searchResults, searchQuery)
+            intent = 'trader_discovery'
+            confidence = 0.9
+
+            // Show trader search results in left panel
+            if (searchResults.traders.length > 0) {
+              // Directly show the search results using content store
+              contentStore.showTraderSearchResults(searchResults, searchQuery, response)
+
+              // Still emit content suggestion for the event system
+              suggestedContent = ['trader-search-results']
+
+              console.log('Directly updated content store with new trader search results')
+            }
+          } catch (error) {
+            console.error('Error processing trader query:', error)
+            response = "I'm having trouble searching our trader network right now. Please try again."
+            intent = 'trader_error'
+            confidence = 0.3
+          }
+        }
+
+        // Search knowledge base (only if no trader response)
+        if (!response && business) {
           console.log(`Searching knowledge for message: "${message}"`)
           const knowledgeResults = knowledgeStore.searchKnowledge(message)
           console.log(`Knowledge search results:`, knowledgeResults)
@@ -115,7 +153,7 @@ export const useChatStore = defineStore('chat', () => {
             const bestMatch = knowledgeResults[0]
 
             // Use scraped website content for response
-            if (bestMatch.isFromWebsite && bestMatch.scrapedContent?.length > 0) {
+            if (bestMatch.isFromWebsite && bestMatch.scrapedContent && bestMatch.scrapedContent.length > 0) {
               const scrapedInfo = bestMatch.scrapedContent[0]
 
               // Extract relevant information from scraped content
@@ -141,13 +179,14 @@ export const useChatStore = defineStore('chat', () => {
           }
         }
 
+
         // Fallback to pattern-based responses if no knowledge found
         if (!response) {
           console.log(`No knowledge base response found, using pattern-based responses for: "${lowerMessage}"`)
           if (lowerMessage.includes('service') || lowerMessage.includes('what do you do')) {
             response = business?.description || 'I\'d be happy to tell you about our services! Let me pull up our company information.'
             intent = 'services_inquiry'
-            suggestedContent = ['company-brochure'] // Suggest company overview
+            suggestedContent = ['product-categories'] // Suggest product categories
             
             // Try to get scraped services content
             if (business) {
@@ -162,7 +201,7 @@ export const useChatStore = defineStore('chat', () => {
           } else if (lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('pricing')) {
             response = 'Let me check our current pricing for you.'
             intent = 'pricing_inquiry'
-            suggestedContent = ['pricing-guide'] // Suggest pricing guide
+            suggestedContent = ['business-inquiry-form'] // Suggest business inquiry form
             
             // Try to get scraped pricing content
             if (business) {
@@ -195,7 +234,7 @@ export const useChatStore = defineStore('chat', () => {
           } else if (lowerMessage.includes('contact') || lowerMessage.includes('reach') || lowerMessage.includes('phone') || lowerMessage.includes('email')) {
             response = 'I can help you get in touch with us.'
             intent = 'contact_inquiry'
-            suggestedContent = ['contact-form'] // Suggest contact form
+            suggestedContent = ['business-inquiry-form'] // Suggest business inquiry form
             
             // Try to get scraped contact content
             if (business) {
@@ -223,7 +262,7 @@ export const useChatStore = defineStore('chat', () => {
           } else if (lowerMessage.includes('appointment') || lowerMessage.includes('book') || lowerMessage.includes('schedule')) {
             response = 'I can help you with scheduling an appointment.'
             intent = 'appointment_inquiry'
-            suggestedContent = ['contact-form'] // Suggest contact form for appointment booking
+            suggestedContent = ['business-inquiry-form'] // Suggest business inquiry form for appointment booking
             
             // Try to get scraped appointment content
             if (business) {
@@ -235,9 +274,9 @@ export const useChatStore = defineStore('chat', () => {
             }
             
           } else if (lowerMessage.includes('demo') || lowerMessage.includes('show') || lowerMessage.includes('see')) {
-            response = 'I can show you a demonstration of our technology!'
+            response = 'I can show you information about our product categories and global trading network!'
             intent = 'demo_inquiry'
-            suggestedContent = ['product-demo'] // Suggest product demo
+            suggestedContent = ['product-categories'] // Suggest product categories
             confidence = 0.8
 
           } else {
