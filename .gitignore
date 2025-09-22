@@ -70,4 +70,4 @@ jspm_packages/
 .serverless
 
 # Docker
-.dockerignore
+.dockerignoretraders_realistic.csv
