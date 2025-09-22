@@ -103,7 +103,7 @@
     const hostUrl = getHostUrl();
 
     // Insert card HTML
-    document.body.insertAdjacentHTML('beforeend', getCardHTML('Quantum Tech Solutions'));
+    document.body.insertAdjacentHTML('beforeend', getCardHTML('QuantumTask AI'));
 
     // Add simple click handler
     const card = document.getElementById('quantum-chat-card');

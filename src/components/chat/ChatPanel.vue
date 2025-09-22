@@ -195,7 +195,7 @@ const statusText = computed(() => {
   if (chatStore.isTyping) return 'AI is typing...'
   if (chatStore.isListening) return 'Listening for your voice...'
   if (!voiceSupported.value) return 'Voice input not available in this browser'
-  return `Powered by ${props.business.name} AI Assistant`
+  return `Powered by QuantumTask® AI Assistant`
 })
 
 // Methods
