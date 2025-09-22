@@ -11,13 +11,69 @@ export interface Message {
 // Content types
 export interface ContentItem {
   id: string
-  type: 'pdf' | 'video' | 'image' | 'form' | 'calculator' | 'booking'
+  type: 'pdf' | 'video' | 'image' | 'form' | 'calculator' | 'booking' | 'website' | 'trader' | 'trader-search'
   title: string
   description?: string
   url?: string
   data?: any
   tags: string[]
   category: string
+}
+
+// Trader types
+export interface TraderContact {
+  person: string
+  email: string
+  phone: string
+  website: string
+}
+
+export interface TraderItem {
+  id: string
+  name: string
+  country: string
+  type: 'Importer' | 'Exporter' | 'Both'
+  products: string[]
+  contact: TraderContact
+  address: string
+  yearsInBusiness: number
+  annualVolume: number
+  tags: string[]
+}
+
+export interface TraderSearchQuery {
+  query?: string
+  country?: string
+  type?: 'Importer' | 'Exporter' | 'Both'
+  products?: string[]
+  minVolume?: number
+  maxVolume?: number
+  minYears?: number
+  tags?: string[]
+}
+
+export interface TraderSearchResult {
+  traders: TraderItem[]
+  totalCount: number
+  filters: {
+    countries: string[]
+    products: string[]
+    types: string[]
+    volumeRange: { min: number; max: number }
+    yearsRange: { min: number; max: number }
+  }
+}
+
+export interface TraderData {
+  traders: TraderItem[]
+  metadata: {
+    totalTraders: number
+    countries: string[]
+    productCategories: string[]
+    tradeTypes: string[]
+    lastUpdated: string
+    dataVersion: string
+  }
 }
 
 // Business configuration
@@ -98,7 +154,7 @@ export interface ContentState {
 // AI response with content suggestion
 export interface AIResponse {
   message: string
-  suggestedContent?: ContentItem[]
+  suggestedContent?: string[]
   intent?: string
   confidence?: number
   followUpQuestions?: string[]
