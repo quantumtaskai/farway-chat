@@ -30,6 +30,15 @@ Add this single line to your website:
 - ✅ Smart popup expansion
 - ✅ Full feature set enabled
 - ✅ Mobile responsive behavior
+- ✅ Cross-origin microphone support
+
+### Requirements for Voice Features
+
+For microphone/voice functionality to work on external websites:
+
+- **HTTPS Required**: Voice APIs only work over secure connections
+- **User Permission**: Users must grant microphone access when prompted
+- **Modern Browser**: Chrome 25+, Firefox 44+, Safari 14.1+, Edge 79+
 
 ## How It Works
 
@@ -48,6 +57,32 @@ Add this single line to your website:
 - **AI responses trigger content** automatically (services → company info, pricing → pricing guide)
 - **Seamless synchronization** between chat and content panels
 - **Modern typography** throughout for enhanced readability
+
+## Troubleshooting Voice Issues
+
+### Common Problems and Solutions
+
+**Microphone button appears grayed out:**
+- ✅ Ensure website is served over HTTPS
+- ✅ Check browser permissions for microphone access
+- ✅ Try refreshing the page and granting permissions
+
+**"Speech recognition not supported" error:**
+- ✅ Verify browser supports Web Speech API
+- ✅ Check if website is in secure context (HTTPS)
+- ✅ Ensure widget iframe has proper permissions policy
+
+**"Microphone access denied" error:**
+- ✅ Click the microphone icon in browser address bar
+- ✅ Set permissions to "Allow" for both host site and widget domain
+- ✅ Refresh the page and try again
+
+### Testing Voice Features
+
+1. **Test on HTTPS**: Deploy to HTTPS-enabled domain
+2. **Grant Permissions**: Allow microphone when browser prompts
+3. **Check Console**: Look for voice API status logs
+4. **Try Different Browsers**: Test across Chrome, Firefox, Safari
 
 ## Analytics Integration
 

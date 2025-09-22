@@ -27,32 +27,59 @@ export function useVoice() {
       recognition.interimResults = true
       recognition.lang = 'en-US'
     }
-    
+
     // Check for Speech Synthesis support
     if (window.speechSynthesis) {
       synthesis = window.speechSynthesis
     }
-    
-    isSupported.value = !!(recognition && synthesis)
+
+    // Enhanced support detection for cross-origin contexts
+    const hasSecureContext = window.isSecureContext || location.protocol === 'https:'
+    const hasPermissionsAPI = 'permissions' in navigator
+
+    isSupported.value = !!(recognition && synthesis && hasSecureContext)
+
+    // Log initialization status for debugging
+    console.log('Voice API Status:', {
+      speechRecognition: !!recognition,
+      speechSynthesis: !!synthesis,
+      secureContext: hasSecureContext,
+      permissionsAPI: hasPermissionsAPI,
+      supported: isSupported.value
+    })
   }
   
   // Speech-to-Text
   function startListening(): Promise<string> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (!recognition) {
-        reject(new Error('Speech recognition not supported'))
+        reject(new Error('Speech recognition not supported in this context. Please ensure you\'re using HTTPS and the site has microphone permissions.'))
         return
       }
-      
+
+      // Check microphone permissions first
+      try {
+        if ('permissions' in navigator) {
+          const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName })
+          if (permission.state === 'denied') {
+            reject(new Error('Microphone access denied. Please enable microphone permissions for this site.'))
+            return
+          }
+        }
+      } catch (error) {
+        console.warn('Unable to check microphone permissions:', error)
+      }
+
       let finalTranscript = ''
-      
+
       recognition.onstart = () => {
         isListening.value = true
+        console.log('Voice recognition started successfully')
       }
-      
+
       recognition.onresult = (event) => {
         let interimTranscript = ''
-        
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript
           if (event.results[i].isFinal) {
@@ -61,25 +88,45 @@ export function useVoice() {
             interimTranscript += transcript
           }
         }
-        
+
         // You could emit interim results here if needed
       }
-      
+
       recognition.onend = () => {
         isListening.value = false
         resolve(finalTranscript.trim())
       }
-      
+
       recognition.onerror = (event) => {
         isListening.value = false
-        reject(new Error(`Speech recognition error: ${event.error}`))
+        console.error('Speech recognition error:', event.error, event.message)
+
+        let errorMessage = 'Speech recognition failed'
+        switch (event.error) {
+          case 'not-allowed':
+            errorMessage = 'Microphone access denied. Please allow microphone access and try again.'
+            break
+          case 'no-speech':
+            errorMessage = 'No speech detected. Please try speaking again.'
+            break
+          case 'network':
+            errorMessage = 'Network error. Please check your connection and try again.'
+            break
+          case 'service-not-allowed':
+            errorMessage = 'Speech service not allowed. This may be due to cross-origin restrictions.'
+            break
+          default:
+            errorMessage = `Speech recognition error: ${event.error}`
+        }
+
+        reject(new Error(errorMessage))
       }
-      
+
       try {
         recognition.start()
       } catch (error) {
         isListening.value = false
-        reject(error)
+        reject(new Error(`Failed to start speech recognition: ${error}`))
       }
     })
   }

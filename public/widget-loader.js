@@ -121,10 +121,11 @@
     card.style.transform = '';
     card.style.display = 'none';
 
-    // Create simple iframe popup
+    // Create iframe popup with microphone permissions
     const iframe = document.createElement('iframe');
     iframe.id = 'quantum-chat-popup';
     iframe.src = `${hostUrl}/widget?mode=simple&auto=true`;
+    iframe.allow = 'microphone; camera; geolocation; encrypted-media; autoplay; fullscreen';
     iframe.style.cssText = `
       position: fixed;
       top: 0;
